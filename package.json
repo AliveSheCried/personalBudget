@@ -1,0 +1,16 @@
+{
+  "name": "cc-personalbudget",
+  "version": "1.0.0",
+  "description": "Codecademy express.js exercise - personal budget",
+  "main": "app.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "author": "Robert Hood",
+  "license": "ISC",
+  "dependencies": {
+    "express": "^4.18.1",
+    "helmet": "^5.1.0",
+    "morgan": "^1.10.0"
+  }
+}
