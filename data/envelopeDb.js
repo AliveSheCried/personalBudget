@@ -11,6 +11,12 @@ const envelopes = [
     budget: 100,
     used: 0,
   },
+  {
+    id: 3,
+    name: "car",
+    budget: 180,
+    used: 0,
+  },
 ];
 
 module.exports = envelopes;
