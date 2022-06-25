@@ -1,8 +1,14 @@
 const express = require("express");
 const envelopeRouter = express.Router();
 
+///import static data
 const envelopes = require("../data/envelopeDb");
-const { getIndex } = require("../utils/utils");
+///import utility and middleware functions
+const {
+  getIndex,
+  getIndexOfEnvelope,
+  requireQuery,
+} = require("../utils/utils");
 
 ////////middleware functions------------------------------------------------------------------------------------
 /////manage get/put by envelopeId
@@ -12,48 +18,14 @@ envelopeRouter.param("id", (req, res, next, id) => {
     req.envelope = envelope;
     next();
   } else {
-    //update to call error function?
     res.status(404).send(`Envelope with id:${id} does not exist`);
   }
 });
 
-/////getIndex of envelope's id
-const getIndexOfEnvelope = (req, res, next) => {
-  const envelopeIndex = envelopes.findIndex(
-    (envelope) => envelope.id === req.envelope.id
-  );
-  req.index = envelopeIndex;
-  next();
-};
-
-////mw copied from stack overflow - checks thats parameters are populated
-// const requireParams = params => (req, res, next) => {
-//   const reqParamList = Object.keys(req.params);
-//   const hasAllRequiredParams = params.every(param =>
-//       reqParamList.includes(param)
-//   );
-//   if (!hasAllRequiredParams)
-//       return res
-//           .status(400)
-//           .send(
-//               `The following parameters are all required for this route: ${params.join(", ")}`
-//           );
-
-//   next();
-// };
-
-// app.get("/some-route", requireParams(["address_line", "zipcode"]), (req, res) => {
-//   const { address_line, zipcode } = req.params;
-//   if (address_line === "") return res.status(400).send("`address_line` must not be an empty string");
-
-//   // continue your normal request processing...
-// });
-
-//////routes-------------------------------------------------------------------------------
+//////routes----------------------------------------------------------------------------------------------------
 ////get routes
 envelopeRouter.get("/", (req, res, next) => {
   if (envelopes.length === 0) {
-    //error handling?
     res.send("There are no budget envelopes to display.");
   } else {
     res.send({ envelopes });
@@ -98,21 +70,32 @@ envelopeRouter.delete("/:id", (req, res, next) => {
 
 ////updates
 //spend
-envelopeRouter.put("/:id", getIndexOfEnvelope, (req, res, next) => {
-  envelopes[req.index].budget = +req.query.budget;
-  envelopes[req.index].used = +req.query.used;
-  res.send(
-    `Envelope ${envelopes[req.index].name} updated.  Budget: ${
-      envelopes[req.index].budget
-    } Used: ${envelopes[req.index].used}`
-  );
-});
+envelopeRouter.put(
+  "/:id",
+  requireQuery(["budget", "used"]),
+  getIndexOfEnvelope,
+  (req, res, next) => {
+    const { budget, used } = req.query;
+    if (budget != +budget || used != +used) {
+      res
+        .status(400)
+        .send("Query parameters 'budget' and 'used' must be positive numbers");
+    }
+    envelopes[req.index].budget = +budget;
+    envelopes[req.index].used = +used;
+    res.send(
+      `Envelope ${envelopes[req.index].name} updated.  Budget: ${
+        envelopes[req.index].budget
+      } Used: ${envelopes[req.index].used}`
+    );
+  }
+);
 
 //transfer
 envelopeRouter.put("/transfer/:fromId/:toId", (req, res, next) => {
-  //instead of middleware above, new external helper fucntion to find index
-  const fromIndex = getIndex(Number(req.params.fromId));
-  const toIndex = getIndex(Number(req.params.toId));
+  const { fromId, toId } = req.params;
+  const fromIndex = getIndex(Number(fromId));
+  const toIndex = getIndex(Number(toId));
 
   let envelopeBalance = envelopes[fromIndex].budget - envelopes[fromIndex].used;
 

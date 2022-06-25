@@ -4,6 +4,7 @@ const helmet = require("helmet");
 
 const indexRouter = require("./routes/index");
 const envelopeRouter = require("./routes/envelope");
+const errorRouter = require("./routes/error");
 
 const app = express();
 app.use(helmet());
@@ -13,6 +14,7 @@ app.use(express.urlencoded({ extended: false }));
 
 app.use("/", indexRouter);
 app.use("/envelopes", envelopeRouter);
+app.use("/error", errorRouter);
 
 const port = 3000;
 
